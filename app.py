@@ -13,24 +13,45 @@ app.config['SECRET_KEY'] = 'your_secret_key_here'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 db = SQLAlchemy(app)
 
-
-
 df = pd.read_csv('Global finance data.csv')
-
-
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
 @app.route("/")
-def hello():
-    return render_template('index.html')
+def home():
+    return render_template('home.html')
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        if not email or not password:
+            flash('Email and password are required')
+            return render_template('login.html')
+
+        user = User.query.filter_by(email=email).first()
+        if user and user.password == password:
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash('Logged in successfully')
+            return redirect(url_for('home'))
+        else:
+            flash('Invalid email or password')
+            return render_template('login.html')
+
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('You have been logged out')
+    return redirect(url_for('login'))
 
 @app.route("/register",methods=['GET','POST'])
 def register():
@@ -38,17 +59,21 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        existing_user = User.query.filter((User.Username==username) | (User.email==email)).first()
+        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
         if existing_user:
             flash('Username or email already exists')
         else:
             # hashed_password = generate_password_hash(password)
-            new_user = User(username=username,email=email, password=password)
+            new_user = User(username=username, email=email, password=password)
             db.session.add(new_user)
             db.session.commit()
             flash('Registration successful! Please log in.')
             return redirect(url_for('login'))
     return render_template('register.html')  
+
+@app.before_request
+def create_tables():
+    db.create_all()
 
 
 
@@ -74,19 +99,19 @@ def Average_Daily_Change_Percentage_By_Country():
 # Graph 3 : GDP Growth Rate by Country
 def GDP_Growth_Rate_By_Country():
     fig = px.bar(df, x='Country', y='GDP_Growth_Rate_Percent',
-       title='GDP Growth Rate by Country',
-       color='Country',
-       text='GDP_Growth_Rate_Percent',
-       template='plotly_white')
+        title='GDP Growth Rate by Country',
+        color='Country',
+        text='GDP_Growth_Rate_Percent',
+        template='plotly_white')
     graph3_html = fig.to_html(full_html=False)
     return graph3_html
 
 # Graph 4 :GDP Growth Rate vs Unemployment Rate
 def GDP_Growth_Rate_vs_Unemployment_Rate():
     fig = px.scatter(df,x='GDP_Growth_Rate_Percent', y='Unemployment_Rate_Percent',  
-      title='GDP Growth Rate vs Unemployment Rate',color='Country',hover_name='Country',
-      size='Market_Cap_Trillion_USD',  # optional: show market cap as marker size
-      labels={'GDP_Growth_Rate_Percent': 'GDP Growth (%)', 'Unemployment_Rate_Percent': 'Unemployment Rate (%)'},
+        title='GDP Growth Rate vs Unemployment Rate',color='Country',hover_name='Country',
+        size='Market_Cap_Trillion_USD',  # optional: show market cap as marker size
+        labels={'GDP_Growth_Rate_Percent': 'GDP Growth (%)', 'Unemployment_Rate_Percent': 'Unemployment Rate (%)'},
     template='plotly_white')
     graph4_html = fig.to_html(full_html=False)
     return graph4_html
@@ -115,8 +140,10 @@ def Inflation_Rate_vs_Interest_Rate_Over_Time():
 # Graph 7 : Inflation Rate vs Interest Rate
 def Inflation_Rate_vs_Interest_Rate():
     fig = px.scatter(df, x='Inflation_Rate_Percent', y='Interest_Rate_Percent',
-           title='Inflation Rate vs Interest Rate',
-           color='Country', trendline='ols')
+            title='Inflation Rate vs Interest Rate',
+            color='Country', 
+            trendline='ols',
+            template='plotly_white')
     graph7_html = fig.to_html(full_html=False)
     return graph7_html
 
@@ -133,10 +160,10 @@ def Exchange_Rate_vs_USD_Over_Time():
 def Currency_Change_Year_to_Date_Percentage_By_Country():
     df['Currency_Change_YTD'] = df['Exchange_Rate_USD'].pct_change()
     fig = px.bar(df, x='Country', y='Currency_Change_YTD_Percent',
-       title='Currency Change Year-to-Date Percentage by Country',
-       color='Currency_Change_YTD_Percent',
-       labels={'Currency_Change_YTD_Percent': 'YTD Change (%)'}
-)
+        title='Currency Change Year-to-Date Percentage by Country',
+        color='Currency_Change_YTD_Percent',
+        labels={'Currency_Change_YTD_Percent': 'YTD Change (%)'},
+        template='plotly_white')
     graph9_html = fig.to_html(full_html=False)
     return graph9_html
 
@@ -165,7 +192,8 @@ def Exchange_Rate_vs_Inflation_with_Market_Cap_and_GDP_Growth():
 def Government_Debt_as_Percentage_of_GDP_by_Country():
     fig =  px.bar(df, x='Country', y='Government_Debt_GDP_Percent',
        title='Government Debt as Percentage of GDP by Country',
-       labels={'Government_Debt_GDP_Percent': 'Government Debt (% of GDP)'}
+       labels={'Government_Debt_GDP_Percent': 'Government Debt (% of GDP)'},
+       template='plotly_white'
 )
     graph11_html = fig.to_html(full_html=False)
     return graph11_html
@@ -190,15 +218,16 @@ def Government_Debt_vs_Credit_Rating():
 # Graph 13 : Political Risk Score by Country
 def Political_Risk_Score_by_Country():
     fig = px.bar(df, x='Country', y='Political_Risk_Score',
-       title='Political Risk Score by Country')
+        title='Political Risk Score by Country',
+       template='plotly_white')
     graph13_html = fig.to_html(full_html=False)
     return graph13_html
 
 # Graph 14 : Banking Sector Health Score by Country
 def Banking_Sector_Health_Score_by_Country():
     fig =  px.bar(df, x='Country', y='Banking_Sector_Health',
-       title='Banking Sector Health Score by Country',
-       labels={'Banking_Sector_Health': 'Banking Sector Health Score'}
+        title='Banking Sector Health Score by Country',
+        labels={'Banking_Sector_Health': 'Banking Sector Health Score'}
 )
     graph14_html = fig.to_html(full_html=False)
     return graph14_html
