@@ -185,8 +185,8 @@
                 {% if session.get('user_id') %}
                 <a href="{{ url_for('logout') }}">Logout ({{ session.get('username') }})</a>
                 {% else %}
-                <a href="{{ url_for('login') }}">Login</a>
-                <a href="{{ url_for('register') }}">Register</a>
+                <!-- <a href="{{ url_for('login') }}">Login</a> -->
+                <!-- <a href="{{ url_for('register') }}">Register</a> -->
                 {% endif %}
             </nav>
         </div>

@@ -1,11 +1,113 @@
 {% extends 'base.html' %}
 
+{% block css %}
+{{ super() }}
+<style>
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 40px 24px;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 48px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 42px;
+        font-weight: 800;
+        margin: 0 0 16px 0;
+        background: linear-gradient(135deg, #fff 0%, #e0e7ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+    }
+
+    .dashboard-header h1 svg {
+        width: 48px;
+        height: 48px;
+        fill: white;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+
+    .dashboard-header p {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.8);
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .chart-grid {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 1fr;
+    }
+
+    .chart-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-header h1 {
+            font-size: 32px;
+        }
+
+        .dashboard-header p {
+            font-size: 16px;
+        }
+
+        .dashboard-container {
+            padding: 24px 16px;
+        }
+
+        .chart-card {
+            padding: 16px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
-    {{ graph1_html|safe }}
-    {{ graph2_html|safe }}
-    {{ graph3_html|safe }}
-    {{ graph4_html|safe }}
-    {{ graph5_html|safe }}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Market Overview</h1>
+        <p>Comprehensive analysis of global stock indices, market trends, and cross-market correlations. Track real-time
+            performance across major financial markets.</p>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            {{ graph1_html|safe }}
+        </div>
+        <div class="chart-card">
+            {{ graph2_html|safe }}
+        </div>
+        <div class="chart-card">
+            {{ graph3_html|safe }}
+        </div>
+        <div class="chart-card">
+            {{ graph4_html|safe }}
+        </div>
+        <div class="chart-card">
+            {{ graph5_html|safe }}
+        </div>
+    </div>
 </div>
 {% endblock %}
